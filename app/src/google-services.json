@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "585795846199",
+    "project_id": "prizma-82ada",
+    "storage_bucket": "prizma-82ada.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585795846199:android:0782cf93f3a30f7d6effb2",
+        "android_client_info": {
+          "package_name": "com.prizma_distribucija.prizma"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "585795846199-g4le33j9ptqh1f67s3mr8lf01baef3iv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsa8Lt3SKlLMBEy3DqobHmLBbYV5pUgis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "585795846199-g4le33j9ptqh1f67s3mr8lf01baef3iv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
