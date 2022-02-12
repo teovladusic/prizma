@@ -10,6 +10,7 @@ import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.GoogleMapMangerFakeImpl
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImplAndroidTest
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.PermissionManagerFakeImpl
+import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.TimerFakeImpl
 import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.BuildNotificationUseCase
 import dagger.Module
 import dagger.Provides
@@ -19,6 +20,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Singleton
 
+@ExperimentalCoroutinesApi
 @Module
 @InstallIn(SingletonComponent::class)
 object TestAppModule {
@@ -26,36 +28,43 @@ object TestAppModule {
     @ExperimentalCoroutinesApi
     @Provides
     @Singleton
-    fun provideTestDispatchers() = AndroidTestDispatchers() as DispatcherProvider
+    fun provideTestDispatchers(): DispatcherProvider = AndroidTestDispatchers()
 
     @Provides
     @Singleton
-    fun provideFakeLogInRepository() = LoginRepoFakeImpl() as LoginRepository
+    fun provideFakeLogInRepository(): LoginRepository = LoginRepoFakeImpl()
 
     @Provides
     @Singleton
-    fun provideLogInUseCase(loginRepository: LoginRepository) = LogInUseCase(loginRepository)
+    fun provideLogInUseCase(loginRepository: LoginRepository): LogInUseCase =
+        LogInUseCase(loginRepository)
 
     @Provides
     @Singleton
-    fun provideTimer() = TimerImpl()
+    fun provideTimer(): Timer = TimerFakeImpl()
 
     @Provides
     @Singleton
-    fun provideLocationTracker(dispatcherProvider: DispatcherProvider) =
-        LocationTrackerFakeImplAndroidTest(dispatcherProvider) as LocationTracker
+    fun provideLocationTracker(dispatcherProvider: DispatcherProvider): LocationTracker =
+        LocationTrackerFakeImplAndroidTest(dispatcherProvider)
 
     @Provides
     @Singleton
-    fun providePermissionManager() = PermissionManagerFakeImpl() as PermissionManager
+    fun providePermissionManager(): PermissionManager =
+        PermissionManagerFakeImpl()
 
     @Provides
     @Singleton
-    fun provideGoogleMapManager() = GoogleMapMangerFakeImpl() as GoogleMapManager
+    fun provideGoogleMapManager(): GoogleMapManager = GoogleMapMangerFakeImpl()
 
     @Provides
     @Singleton
     fun provideBuildNotificationUseCase(
         @ApplicationContext appContext: Context
-    ) = BuildNotificationUseCase(appContext)
+    ): BuildNotificationUseCase = BuildNotificationUseCase(appContext)
+
+    @Provides
+    @Singleton
+    fun provideDistanceCalculator(dispatcherProvider: DispatcherProvider): DistanceCalculator =
+        DistanceCalculatorImpl(dispatcherProvider)
 }

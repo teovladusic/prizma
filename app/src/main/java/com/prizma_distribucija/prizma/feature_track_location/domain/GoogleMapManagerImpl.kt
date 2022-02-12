@@ -1,5 +1,6 @@
 package com.prizma_distribucija.prizma.feature_track_location.domain
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import com.google.android.gms.maps.CameraUpdate
@@ -9,12 +10,13 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.maps.android.SphericalUtil
 import com.prizma_distribucija.prizma.R
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
+import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.BearingCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
 
 class GoogleMapManagerImpl(
     private val dispatchers: DispatcherProvider
@@ -24,12 +26,16 @@ class GoogleMapManagerImpl(
         .color(Constants.POLYLINE_COLOR)
         .width(Constants.POLYLINE_WIDTH)
 
-    override fun onNewPathPoints(map: GoogleMap, pathPoints: List<LatLng>) {
-        if (pathPoints.isEmpty()) return
-        drawPolyLineBetweenCurrentAndPreviousLocation(map, pathPoints.last())
-        if (pathPoints.size < 2) return
-        val preLastLatLng = pathPoints.dropLast(1).last()
-        moveCameraAndZoomIfNeeded(map, pathPoints.last(), preLastLatLng)
+    private var map: GoogleMap? = null
+    private var latestLatLng: LatLng? = null
+
+    override fun onNewPathPoints(map: GoogleMap, locations: List<Location>) {
+        this.map = map
+        if (locations.isEmpty()) return
+        this.latestLatLng = LatLng(locations.last().latitude, locations.last().longitude)
+        drawPolyLineBetweenCurrentAndPreviousLocation(map, latestLatLng!!)
+        if (locations.size < 2) return
+        moveCameraAndZoomIfNeeded(map, locations.last())
     }
 
     private fun drawPolyLineBetweenCurrentAndPreviousLocation(map: GoogleMap, latLng: LatLng) {
@@ -41,8 +47,9 @@ class GoogleMapManagerImpl(
         }
     }
 
-    override fun drawPolyLineBetweenAllPathPoints(map: GoogleMap, pathPoints: List<LatLng>) {
+    override fun drawPolyLineBetweenAllPathPoints(map: GoogleMap, locations: List<Location>) {
         CoroutineScope(dispatchers.main).launch {
+            val pathPoints = locations.map { LatLng(it.latitude, it.longitude) }
             map.addPolyline(
                 polylineOptions
                     .addAll(pathPoints)
@@ -50,6 +57,7 @@ class GoogleMapManagerImpl(
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun setStyle(map: GoogleMap, context: Context) {
         map.setMapStyle(
             MapStyleOptions.loadRawResourceStyle(
@@ -57,29 +65,25 @@ class GoogleMapManagerImpl(
                 R.raw.google_maps_style
             )
         )
+        map.isMyLocationEnabled = true
+        map.isIndoorEnabled = true
+        map.isBuildingsEnabled = true
     }
 
-    private fun moveCameraAndZoomIfNeeded(map: GoogleMap, latLng: LatLng, preLastLatLng: LatLng) {
+
+    private fun moveCameraAndZoomIfNeeded(
+        map: GoogleMap,
+        location: Location,
+    ) {
         val zoom =
             if (map.cameraPosition.zoom < 12f) Constants.DEFAULT_MAP_ZOOM
             else map.cameraPosition.zoom
 
-        val firstLocation = Location("")
-        firstLocation.longitude = preLastLatLng.longitude
-        firstLocation.latitude = preLastLatLng.latitude
-
-        val secondLocation = Location("")
-        secondLocation.longitude = latLng.longitude
-        secondLocation.latitude = latLng.latitude
-
-        val rotation = firstLocation.bearingTo(secondLocation)
-
-
         val position =
             CameraPosition.Builder()
-                .bearing(rotation)
-                .target(latLng)
+                .target(LatLng(location.latitude, location.longitude))
                 .tilt(60f)
+                .bearing(BearingCalculator.currentBearing)
                 .zoom(zoom)
 
         map.animateCamera(CameraUpdateFactory.newCameraPosition(position.build()))

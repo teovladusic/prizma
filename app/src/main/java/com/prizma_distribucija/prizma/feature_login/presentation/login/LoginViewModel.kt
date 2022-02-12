@@ -14,16 +14,16 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     state: SavedStateHandle,
     private val logInUseCase: LogInUseCase,
-    private val dispatcher: DispatcherProvider
+    private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
     val code = state.getLiveData("code", "")
 
-    fun onDigitAdded(digit: Int) = viewModelScope.launch(dispatcher.default) {
+    fun onDigitAdded(digit: Int) = viewModelScope.launch(dispatchers.default) {
         var newCode = code.value ?: ""
 
         if (canAddNewDigitToCode(newCode)) {
-            newCode = "$newCode${digit}"
+            newCode = "$newCode$digit"
             code.postValue(newCode)
             if (isCodeMaxLength(newCode)) {
                 logIn(newCode)
@@ -52,8 +52,8 @@ class LoginViewModel @Inject constructor(
     private val _signInStatus = MutableSharedFlow<Resource<User>>()
     val signInStatus = _signInStatus.asSharedFlow()
 
-    private fun logIn(code: String) = viewModelScope.launch(dispatcher.io) {
-        logInUseCase(code).collectLatest {
+    private fun logIn(code: String) = viewModelScope.launch(dispatchers.io) {
+        logInUseCase(code).collect {
             _signInStatus.emit(it)
         }
     }

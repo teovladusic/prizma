@@ -8,7 +8,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import com.prizma_distribucija.prizma.R
 import com.prizma_distribucija.prizma.core.di.CoreModule
-import com.prizma_distribucija.prizma.feature_track_location.domain.LocationTracker
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImplAndroidTest
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.PermissionManagerFakeImpl
 import com.prizma_distribucija.prizma.launchFragmentInHiltContainer
@@ -20,7 +19,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 @HiltAndroidTest

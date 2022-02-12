@@ -2,6 +2,7 @@ package com.prizma_distribucija.prizma.feature_login.data.repository
 
 import com.prizma_distribucija.prizma.core.domain.model.User
 import com.prizma_distribucija.prizma.feature_login.domain.repository.LoginRepository
+import kotlinx.coroutines.delay
 
 class LoginRepoFakeImpl : LoginRepository {
     companion object {

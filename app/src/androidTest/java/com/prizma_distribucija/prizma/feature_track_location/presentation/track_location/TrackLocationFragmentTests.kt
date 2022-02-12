@@ -1,5 +1,6 @@
 package com.prizma_distribucija.prizma.feature_track_location.presentation.track_location
 
+import android.location.Location
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
@@ -15,12 +16,24 @@ import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.GoogleMapMangerFakeImpl
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImplAndroidTest
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.PermissionManagerFakeImpl
+import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.TimerFakeImpl
 import com.prizma_distribucija.prizma.launchFragmentInHiltContainer
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import junit.framework.Assert.assertFalse
+import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
+import org.hamcrest.CoreMatchers.not
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -183,13 +196,17 @@ class TrackLocationFragmentTests {
             click()
         )
 
-        assert(LocationTrackerFakeImplAndroidTest._pathPoints.value.first() == LatLng(1.0, 1.0))
+        val location = Location("")
+        location.latitude = 1.0
+        location.longitude = 1.0
+        assert(LocationTrackerFakeImplAndroidTest._locations.value.first() == location)
+
 
         assert(GoogleMapMangerFakeImpl.isOnNewPathPointsCalled == true)
     }
 
     @Test
-    fun onFragmentLaunch_isMapsStyleSet()  {
+    fun onFragmentLaunch_isMapsStyleSet() {
         GoogleMapMangerFakeImpl.isSetStyleCalled = false
         launchFragmentInHiltContainer<TrackLocationFragment> {
             val supportMapFragment =
@@ -198,5 +215,15 @@ class TrackLocationFragmentTests {
                 assert(GoogleMapMangerFakeImpl.isSetStyleCalled == true)
             }
         }
+    }
+
+    @Test
+    fun onTimerEmitValue_setText() = runTest {
+        launchFragmentInHiltContainer<TrackLocationFragment> {
+        }
+
+        TimerFakeImpl._formattedTimePassed.emit("00:00:01")
+
+        onView(withId(R.id.tv_time)).check(matches(withText("00:00:01")))
     }
 }

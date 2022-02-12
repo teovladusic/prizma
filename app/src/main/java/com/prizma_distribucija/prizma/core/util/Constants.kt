@@ -1,6 +1,9 @@
 package com.prizma_distribucija.prizma.core.util
 
 import android.graphics.Color
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
+import com.google.maps.android.collections.PolylineManager
 
 object Constants {
     const val USERS_COLLECTION_NAME = "users"

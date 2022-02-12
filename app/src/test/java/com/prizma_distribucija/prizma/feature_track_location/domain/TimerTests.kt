@@ -1,16 +1,8 @@
 package com.prizma_distribucija.prizma.feature_track_location.domain
 
-import androidx.fragment.app.testing.launchFragment
-import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.prizma_distribucija.prizma.core.util.DispatcherProvider
 import com.prizma_distribucija.prizma.core.util.TestDispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test

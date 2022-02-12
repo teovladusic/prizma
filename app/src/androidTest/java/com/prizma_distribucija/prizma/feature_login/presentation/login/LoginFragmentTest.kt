@@ -18,7 +18,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.*
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -39,7 +39,7 @@ class LoginFragmentTest {
     }
 
     @Test
-    fun onLoginSuccess_navigateToTrackLocationFragment() = runBlockingTest {
+    fun onLoginSuccess_navigateToTrackLocationFragment() = runTest {
         val navController = mock(NavController::class.java)
 
         launchFragmentInHiltContainer<LoginFragment> {
@@ -59,7 +59,7 @@ class LoginFragmentTest {
     }
 
     @Test
-    fun onLoginSuccess_loadingDialogDismiss() = runBlockingTest {
+    fun onLoginSuccess_loadingDialogDismiss() = runTest {
         val navController = mock(NavController::class.java)
         val loadingDialog = mock(AlertDialog::class.java)
 
@@ -73,13 +73,12 @@ class LoginFragmentTest {
         onView(withId(R.id.tv_num1)).perform(click())
         onView(withId(R.id.tv_num1)).perform(click())
 
-        verify(loadingDialog).show()
         verify(loadingDialog).dismiss()
         assert(loadingDialog.isShowing == false)
     }
 
     @Test
-    fun onLoginLoading_loadingDialogShow() = runBlockingTest {
+    fun onLoginLoading_loadingDialogShow() = runTest {
         val navController = mock(NavController::class.java)
         val loadingDialog = mock(AlertDialog::class.java)
 
@@ -97,7 +96,7 @@ class LoginFragmentTest {
     }
 
     @Test
-    fun onLoginError_loadingDialogDismiss_showSnackbar() = runBlockingTest {
+    fun onLoginError_loadingDialogDismiss_showSnackbar() = runTest {
         val navController = mock(NavController::class.java)
         val loadingDialog = mock(AlertDialog::class.java)
 
@@ -116,7 +115,7 @@ class LoginFragmentTest {
         assert(loadingDialog.isShowing == false)
 
         onView(withText(Constants.NO_USER_FOUND_ERROR_MESSAGE))
-            .check(ViewAssertions.matches(isDisplayed()));
+            .check(ViewAssertions.matches(isDisplayed()))
     }
 
     @Test

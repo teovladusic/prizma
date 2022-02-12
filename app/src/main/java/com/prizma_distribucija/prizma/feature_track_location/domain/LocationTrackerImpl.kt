@@ -1,11 +1,14 @@
 package com.prizma_distribucija.prizma.feature_track_location.domain
 
 import android.annotation.SuppressLint
+import android.location.Location
 import android.os.Looper
 import androidx.annotation.VisibleForTesting
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.location.LocationResult
 import com.prizma_distribucija.prizma.core.util.Constants.FASTEST_LOCATION_INTERVAL
 import com.prizma_distribucija.prizma.core.util.Constants.LOCATION_UPDATE_INTERVAL
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
@@ -17,14 +20,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class LocationTrackerImpl @Inject constructor(
-    private val dispatchers: DispatcherProvider
+    private val dispatchers: DispatcherProvider,
+    private val distanceCalculator: DistanceCalculator
 ) : LocationTracker {
 
     private val _isTrackingStateFlow = MutableStateFlow(false)
     override val isTrackingStateFlow: StateFlow<Boolean> = _isTrackingStateFlow
 
-    private val _pathPoints = MutableStateFlow(emptyList<LatLng>())
-    override val pathPoints = _pathPoints.asStateFlow()
+    private val _locations = MutableStateFlow(emptyList<Location>())
+    override val locations = _locations.asStateFlow()
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -38,8 +42,8 @@ class LocationTrackerImpl @Inject constructor(
     }
 
     private fun resetPathPoints() = CoroutineScope(dispatchers.default).launch {
-        val newPathPoints = emptyList<LatLng>()
-        _pathPoints.emit(newPathPoints)
+        val newLocations = emptyList<Location>()
+        _locations.emit(newLocations)
     }
 
     private fun setFusedLocationProviderClient(fusedLocationProviderClient: FusedLocationProviderClient) {
@@ -86,18 +90,18 @@ class LocationTrackerImpl @Inject constructor(
 
             result.locations.apply {
                 for (location in this) {
-                    addPathPoint(location.latitude, location.longitude)
+                    addLocationAndCalculateDistance(location)
                 }
             }
         }
     }
 
-    private fun addPathPoint(latitude: Double, longitude: Double) =
-        CoroutineScope(dispatchers.default).launch {
-            val latLng = LatLng(latitude, longitude)
-            val newPathPointList = mutableListOf<LatLng>()
-            newPathPointList.addAll(pathPoints.value)
-            newPathPointList.add(latLng)
-            _pathPoints.emit(newPathPointList)
+    private fun addLocationAndCalculateDistance(location: Location) =
+        CoroutineScope(dispatchers.main).launch {
+            val newLocations = mutableListOf<Location>()
+            newLocations.addAll(locations.value)
+            newLocations.add(location)
+            distanceCalculator.calculate(newLocations)
+            _locations.emit(newLocations)
         }
 }

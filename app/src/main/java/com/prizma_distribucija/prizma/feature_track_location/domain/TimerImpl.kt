@@ -27,8 +27,8 @@ class TimerImpl @Inject constructor(
         timeStarted = System.currentTimeMillis()
 
         while (isTimerEnabled) {
-            calculateTimeAndEmitNewTime()
             delay(1000)
+            calculateTimeAndEmitNewTime()
         }
     }
 

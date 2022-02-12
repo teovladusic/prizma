@@ -1,28 +1,24 @@
 package com.prizma_distribucija.prizma.feature_track_location.presentation.track_location
 
-import android.Manifest
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.View
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.material.snackbar.Snackbar
 import com.prizma_distribucija.prizma.R
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.core.util.collectLatestLifecycleFlow
-import com.prizma_distribucija.prizma.core.util.exhaustive
 import com.prizma_distribucija.prizma.databinding.FragmentTrackLocationBinding
 import com.prizma_distribucija.prizma.feature_track_location.domain.GoogleMapManager
 import com.prizma_distribucija.prizma.feature_track_location.domain.PermissionManager
-import com.prizma_distribucija.prizma.feature_track_location.domain.PermissionManagerImpl
 import dagger.hilt.android.AndroidEntryPoint
-import pub.devrel.easypermissions.AppSettingsDialog
-import pub.devrel.easypermissions.EasyPermissions
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -39,22 +35,33 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
     private var _binding: FragmentTrackLocationBinding? = null
     private val binding get() = _binding!!
 
+    private lateinit var bearingCalculator: BearingCalculator
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var map: GoogleMap? = null
 
     override fun onResume() {
         super.onResume()
-        map?.let {
-            googleMapsManager.drawPolyLineBetweenAllPathPoints(it, viewModel.pathPoints.value)
+        map?.let { it ->
+            googleMapsManager.drawPolyLineBetweenAllPathPoints(it, viewModel.locations.value)
         }
+        bearingCalculator.registerListener()
+    }
+
+    override fun onPause() {
+        bearingCalculator.unregisterListener()
+        super.onPause()
     }
 
 
+    @SuppressLint("SetTextI18n")
     @Suppress("IMPLICIT_CAST_TO_ANY")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentTrackLocationBinding.bind(view)
+
+        bearingCalculator = BearingCalculator(requireContext())
 
         setUpGoogleMap()
 
@@ -80,16 +87,17 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
                 is TrackLocationViewModel.TrackLocationEvents.SendCommandToForegroundService -> {
                     sendCommandToTrackingForegroundService(event.action)
                 }
-                else -> {
-                    //do nothing
-                }
             }
         }
 
-        requireActivity().collectLatestLifecycleFlow(viewModel.pathPoints) { pathPoints ->
+        requireActivity().collectLatestLifecycleFlow(viewModel.locations) { locations ->
             map?.let {
-                googleMapsManager.onNewPathPoints(it, pathPoints)
+                googleMapsManager.onNewPathPoints(it, locations)
             }
+        }
+
+        requireActivity().collectLatestLifecycleFlow(viewModel.distanceTravelled) { distance ->
+            binding.tvDistance.text = "$distance km"
         }
 
         requireActivity().collectLatestLifecycleFlow(viewModel.timePassed) { timePassed ->

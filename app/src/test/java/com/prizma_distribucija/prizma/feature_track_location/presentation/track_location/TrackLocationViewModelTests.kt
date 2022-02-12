@@ -5,15 +5,19 @@ import com.google.common.truth.Truth.assertThat
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
 import com.prizma_distribucija.prizma.core.util.TestDispatchers
-import com.prizma_distribucija.prizma.feature_track_location.domain.LocationTracker
-import com.prizma_distribucija.prizma.feature_track_location.domain.Timer
-import com.prizma_distribucija.prizma.feature_track_location.domain.TimerImpl
+import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImpl
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.*
+import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 class TrackLocationViewModelTests {
@@ -25,7 +29,9 @@ class TrackLocationViewModelTests {
         val testDispatchers = TestDispatchers() as DispatcherProvider
         val locationTracker = LocationTrackerFakeImpl(testDispatchers) as LocationTracker
         val timer = TimerImpl(testDispatchers) as Timer
-        viewModel = TrackLocationViewModel(testDispatchers, locationTracker, timer)
+        val distanceCalculator = DistanceCalculatorImpl(testDispatchers)
+        viewModel =
+            TrackLocationViewModel(testDispatchers, locationTracker, timer, distanceCalculator)
     }
 
     @Test
@@ -113,4 +119,27 @@ class TrackLocationViewModelTests {
             job.join()
             job.cancel()
         }
+
+    @Test
+    fun `map distance travelled, correctly covert meters to km, round to 2 decimals`() = runTest {
+        val dispatcherProvider: DispatcherProvider = TestDispatchers()
+        val locationTracker: LocationTracker = LocationTrackerFakeImpl(dispatcherProvider)
+        val timer: Timer = TimerImpl(dispatcherProvider)
+
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+        val distanceTravelledInMeters = 500.0
+        val results = MutableStateFlow(distanceTravelledInMeters)
+
+        `when`(distanceCalculator.distanceTravelled).thenReturn(results)
+
+        val viewModel =
+            TrackLocationViewModel(dispatcherProvider, locationTracker, timer, distanceCalculator)
+
+        val expected = BigDecimal(0.50).setScale(2)
+
+        viewModel.distanceTravelled.test {
+            val distanceInKm = awaitItem()
+            assertThat(distanceInKm).isEqualTo(expected)
+        }
+    }
 }

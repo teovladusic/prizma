@@ -55,8 +55,8 @@ object CoreModule {
 
     @Provides
     @Singleton
-    fun provideLocationTracker(dispatchers: DispatcherProvider): LocationTracker =
-        LocationTrackerImpl(dispatchers)
+    fun provideLocationTracker(dispatchers: DispatcherProvider, distanceCalculator: DistanceCalculator): LocationTracker =
+        LocationTrackerImpl(dispatchers, distanceCalculator)
 
     @Provides
     @Singleton
@@ -72,4 +72,9 @@ object CoreModule {
     fun provideBuildNotificationUseCase(
         @ApplicationContext appContext: Context
     ) = BuildNotificationUseCase(appContext)
+
+    @Provides
+    @Singleton
+    fun provideDistanceCalculator(dispatchers: DispatcherProvider): DistanceCalculator =
+        DistanceCalculatorImpl(dispatchers)
 }

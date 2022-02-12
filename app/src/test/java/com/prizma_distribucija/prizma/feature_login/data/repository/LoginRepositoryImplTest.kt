@@ -1,29 +1,17 @@
 package com.prizma_distribucija.prizma.feature_login.data.repository
 
 import com.google.common.truth.Truth.assertThat
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.ktx.Firebase
 import com.prizma_distribucija.prizma.core.data.services.FirebaseService
 import com.prizma_distribucija.prizma.core.domain.model.User
-import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.feature_login.data.remote.dto.UserDto
 import com.prizma_distribucija.prizma.feature_login.domain.model.UserDtoMapper
-import com.prizma_distribucija.prizma.feature_login.domain.repository.LoginRepository
-import com.prizma_distribucija.prizma.rules.MainCoroutineRule
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runBlockingTest
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.mockito.Mock
-import org.mockito.Mockito
 
 @ExperimentalCoroutinesApi
 @RunWith(JUnit4::class)

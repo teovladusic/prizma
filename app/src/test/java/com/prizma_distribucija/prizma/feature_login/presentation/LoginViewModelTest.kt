@@ -17,6 +17,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -43,7 +44,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `on digit added, code is empty string, should add new digit`() = runBlockingTest {
+    fun `on digit added, code is empty string, should add new digit`() = runTest {
         val savedStateHandle = SavedStateHandle()
         savedStateHandle.set("code", "")
         val logInUseCase = mockk<LogInUseCase>()
@@ -65,7 +66,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `on digit added, code has 3 digits, should call login`() = runBlockingTest {
+    fun `on digit added, code has 3 digits, should call login`() = runTest {
         val savedStateHandle = SavedStateHandle()
         val initialCode = "123"
         savedStateHandle.set("code", initialCode)
@@ -95,7 +96,7 @@ class LoginViewModelTest {
 
     @Test
     fun `on digit added, should call login, should observe error and get the correct message`() =
-        runBlockingTest {
+        runTest {
             val savedStateHandle = SavedStateHandle()
             val initialCode = "123"
             savedStateHandle.set("code", initialCode)
@@ -132,7 +133,7 @@ class LoginViewModelTest {
 
     @Test
     fun `on digit added, code has 3 digits, should call login, should observe success and the correct data`() =
-        runBlockingTest {
+        runTest {
             val savedStateHandle = SavedStateHandle()
             val initialCode = "123"
             savedStateHandle.set("code", initialCode)

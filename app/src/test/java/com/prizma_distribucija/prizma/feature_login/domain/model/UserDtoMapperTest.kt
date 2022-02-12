@@ -1,6 +1,5 @@
 package com.prizma_distribucija.prizma.feature_login.domain.model
 
-import com.google.common.truth.Truth.assertThat
 import com.prizma_distribucija.prizma.core.domain.model.User
 import com.prizma_distribucija.prizma.feature_login.data.remote.dto.UserDto
 import junit.framework.Assert.assertEquals

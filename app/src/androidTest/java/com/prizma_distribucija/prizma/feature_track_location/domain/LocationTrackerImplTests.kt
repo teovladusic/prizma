@@ -39,7 +39,8 @@ class LocationTrackerImplTests {
     fun setUp() {
         hiltRule.inject()
         val testDispatchers = AndroidTestDispatchers()
-        locationTracker = LocationTrackerImpl(testDispatchers)
+        val distanceCalculator: DistanceCalculator = DistanceCalculatorImpl(testDispatchers)
+        locationTracker = LocationTrackerImpl(testDispatchers, distanceCalculator)
         context = ApplicationProvider.getApplicationContext()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
     }
@@ -121,17 +122,14 @@ class LocationTrackerImplTests {
         location2.latitude = 2.0
         location2.longitude = 2.0
 
-        val latLng1 = LatLng(1.0, 1.0)
-        val latLng2 = LatLng(2.0, 2.0)
-
         val locationResult = LocationResult.create(listOf(location1, location2))
 
-        assert(locationTracker.pathPoints.value.isEmpty())
+        assert(locationTracker.locations.value.isEmpty())
 
         locationTracker.locationCallback.onLocationResult(locationResult)
 
-        assert(locationTracker.pathPoints.value[0] == latLng1)
-        assert(locationTracker.pathPoints.value[1] == latLng2)
+        assert(locationTracker.locations.value[0] == location1)
+        assert(locationTracker.locations.value[1] == location2)
     }
 
     @Test
@@ -144,19 +142,16 @@ class LocationTrackerImplTests {
         location2.latitude = 2.0
         location2.longitude = 2.0
 
-        val latLng1 = LatLng(1.0, 1.0)
-        val latLng2 = LatLng(2.0, 2.0)
-
         val locationResult = LocationResult.create(listOf(location1, location2))
 
         locationTracker.locationCallback.onLocationResult(locationResult)
 
-        assert(locationTracker.pathPoints.value[0] == latLng1)
-        assert(locationTracker.pathPoints.value[1] == latLng2)
+        assert(locationTracker.locations.value[0] == location1)
+        assert(locationTracker.locations.value[1] == location2)
 
         locationTracker.startTracking(fusedLocationProviderClient)
 
-        assert(locationTracker.pathPoints.value.isEmpty())
+        assert(locationTracker.locations.value.isEmpty())
 
         locationTracker.stopTracking()
     }
