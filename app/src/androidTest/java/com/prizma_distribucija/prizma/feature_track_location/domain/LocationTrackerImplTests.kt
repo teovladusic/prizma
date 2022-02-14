@@ -10,10 +10,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.prizma_distribucija.prizma.core.di.CoreModule
 import com.prizma_distribucija.prizma.core.util.AndroidTestDispatchers
 import com.prizma_distribucija.prizma.core.util.Constants
+import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.TrackingForegroundService
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -113,7 +116,26 @@ class LocationTrackerImplTests {
     }
 
     @Test
-    fun onLocationResult_correctlyAddsAllPathPoints() {
+    fun stopTracking_setsDistance() = runTest {
+        val dispatchers = AndroidTestDispatchers()
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+
+        `when`(distanceCalculator.distanceTravelled).thenReturn(MutableStateFlow(2000.0).asStateFlow())
+
+        val locationTracker = LocationTrackerImpl(dispatchers, distanceCalculator)
+
+        val fusedLocationProviderClient = mock(FusedLocationProviderClient::class.java)
+
+        locationTracker.startTracking(fusedLocationProviderClient)
+
+        locationTracker.stopTracking()
+
+        assert(TrackingForegroundService.distance == "2.00")
+
+    }
+
+    @Test
+    fun onLocationResult_correctlyAddsAllPathPointsAndCalculatesDistance() {
         val location1 = Location("")
         location1.latitude = 1.0
         location1.longitude = 1.0
@@ -121,6 +143,11 @@ class LocationTrackerImplTests {
         val location2 = Location("")
         location2.latitude = 2.0
         location2.longitude = 2.0
+
+        val dispatchers = AndroidTestDispatchers()
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+
+        val locationTracker = LocationTrackerImpl(dispatchers, distanceCalculator)
 
         val locationResult = LocationResult.create(listOf(location1, location2))
 
@@ -130,6 +157,8 @@ class LocationTrackerImplTests {
 
         assert(locationTracker.locations.value[0] == location1)
         assert(locationTracker.locations.value[1] == location2)
+
+        verify(distanceCalculator).calculate(locationTracker.locations.value.toList())
     }
 
     @Test
@@ -154,5 +183,18 @@ class LocationTrackerImplTests {
         assert(locationTracker.locations.value.isEmpty())
 
         locationTracker.stopTracking()
+    }
+
+    @Test
+    fun onStart_shouldResetDistance() = runTest {
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+        val dispatchers = AndroidTestDispatchers()
+        val locationTracker =
+            LocationTrackerImpl(dispatchers, distanceCalculator) as LocationTracker
+
+        val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+        locationTracker.startTracking(fusedLocationProviderClient)
+
+        verify(distanceCalculator).reset()
     }
 }

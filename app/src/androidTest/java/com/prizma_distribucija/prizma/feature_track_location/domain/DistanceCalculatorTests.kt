@@ -2,7 +2,6 @@ package com.prizma_distribucija.prizma.feature_track_location.domain
 
 import android.location.Location
 import com.prizma_distribucija.prizma.core.util.AndroidTestDispatchers
-import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -61,5 +60,27 @@ class DistanceCalculatorTests {
         } else {
             assert(false)
         }
+    }
+
+    @Test
+    fun reset_shouldResetDistanceTravelled() {
+        //fake distance
+        val location1 = Location("")
+        location1.latitude = 45.0
+        location1.longitude = 45.0
+
+        val location2 = Location("")
+        location2.latitude = 90.0
+        location2.longitude = 90.0
+
+        val locations = listOf(location1, location2)
+
+        distanceCalculator.calculate(locations)
+
+        assert(distanceCalculator.distanceTravelled.value != 0.0)
+
+        distanceCalculator.reset()
+
+        assert(distanceCalculator.distanceTravelled.value == 0.0)
     }
 }

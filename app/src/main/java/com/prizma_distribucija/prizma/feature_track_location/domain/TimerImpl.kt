@@ -2,6 +2,8 @@ package com.prizma_distribucija.prizma.feature_track_location.domain
 
 import android.util.Log
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
+import com.prizma_distribucija.prizma.core.util.formatDateInMillisToString
+import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.TrackingForegroundService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ class TimerImpl @Inject constructor(
     override fun startCounting() = CoroutineScope(dispatcherProvider.default).launch {
         isTimerEnabled = true
         timeStarted = System.currentTimeMillis()
+        TrackingForegroundService.timeStarted = formatDateInMillisToString(timeStarted)
 
         while (isTimerEnabled) {
             delay(1000)
@@ -69,5 +72,7 @@ class TimerImpl @Inject constructor(
 
     override fun stopCounting() {
         isTimerEnabled = false
+        val time = System.currentTimeMillis()
+        TrackingForegroundService.timeFinished = formatDateInMillisToString(time)
     }
 }

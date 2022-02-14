@@ -7,13 +7,14 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.filters.MediumTest
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.prizma_distribucija.prizma.R
 import com.prizma_distribucija.prizma.core.di.CoreModule
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
-import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.GoogleMapMangerFakeImpl
+import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.GoogleMapManagerFakeImpl
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImplAndroidTest
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.PermissionManagerFakeImpl
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.TimerFakeImpl
@@ -21,22 +22,13 @@ import com.prizma_distribucija.prizma.launchFragmentInHiltContainer
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
-import org.hamcrest.CoreMatchers.not
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.*
 
 @MediumTest
 @ExperimentalCoroutinesApi
@@ -202,17 +194,17 @@ class TrackLocationFragmentTests {
         assert(LocationTrackerFakeImplAndroidTest._locations.value.first() == location)
 
 
-        assert(GoogleMapMangerFakeImpl.isOnNewPathPointsCalled == true)
+        assert(GoogleMapManagerFakeImpl.isOnNewPathPointsCalled == true)
     }
 
     @Test
     fun onFragmentLaunch_isMapsStyleSet() {
-        GoogleMapMangerFakeImpl.isSetStyleCalled = false
+        GoogleMapManagerFakeImpl.isSetStyleCalled = false
         launchFragmentInHiltContainer<TrackLocationFragment> {
             val supportMapFragment =
                 childFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment?
-            supportMapFragment?.getMapAsync { googleMap ->
-                assert(GoogleMapMangerFakeImpl.isSetStyleCalled == true)
+            supportMapFragment?.getMapAsync { _ ->
+                assert(GoogleMapManagerFakeImpl.isSetStyleCalled == true)
             }
         }
     }
@@ -225,5 +217,29 @@ class TrackLocationFragmentTests {
         TimerFakeImpl._formattedTimePassed.emit("00:00:01")
 
         onView(withId(R.id.tv_time)).check(matches(withText("00:00:01")))
+    }
+
+    @Test
+    fun onStopClick_shouldCallGoogleMapsManagerToZoomOut() {
+        launchFragmentInHiltContainer<TrackLocationFragment> {
+        }
+
+        PermissionManagerFakeImpl.hasPermissions = true
+
+        assert(LocationTrackerFakeImplAndroidTest._isTrackingStateFlow.value == false)
+
+        onView(withId(R.id.btn_stop_start)).perform(
+            click()
+        )
+
+        assert(LocationTrackerFakeImplAndroidTest._isTrackingStateFlow.value)
+
+        onView(withId(R.id.btn_stop_start)).perform(
+            click()
+        )
+
+        assert(LocationTrackerFakeImplAndroidTest._isTrackingStateFlow.value == false)
+
+        assert(GoogleMapManagerFakeImpl.hasZoomedOut)
     }
 }

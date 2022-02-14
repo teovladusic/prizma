@@ -12,11 +12,14 @@ import com.google.android.gms.location.LocationResult
 import com.prizma_distribucija.prizma.core.util.Constants.FASTEST_LOCATION_INTERVAL
 import com.prizma_distribucija.prizma.core.util.Constants.LOCATION_UPDATE_INTERVAL
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
+import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.TrackingForegroundService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 class LocationTrackerImpl @Inject constructor(
@@ -34,11 +37,16 @@ class LocationTrackerImpl @Inject constructor(
 
     override fun startTracking(fusedLocationProviderClient: FusedLocationProviderClient) {
         resetPathPoints()
+        resetDistanceCalculator()
         setFusedLocationProviderClient(fusedLocationProviderClient)
         CoroutineScope(dispatchers.default).launch {
             _isTrackingStateFlow.emit(true)
             requestLocationUpdates()
         }
+    }
+
+    private fun resetDistanceCalculator() {
+        distanceCalculator.reset()
     }
 
     private fun resetPathPoints() = CoroutineScope(dispatchers.default).launch {
@@ -54,7 +62,13 @@ class LocationTrackerImpl @Inject constructor(
         CoroutineScope(dispatchers.default).launch {
             _isTrackingStateFlow.emit(false)
             removeLocationUpdates()
+            TrackingForegroundService.distance =
+                convertDistanceInMetersToKm(distanceCalculator.distanceTravelled.value).toString()
         }
+    }
+
+    private fun convertDistanceInMetersToKm(distance: Double): BigDecimal {
+        return BigDecimal(distance / 1000).setScale(2, RoundingMode.HALF_EVEN)
     }
 
     @SuppressLint("MissingPermission")
@@ -101,7 +115,7 @@ class LocationTrackerImpl @Inject constructor(
             val newLocations = mutableListOf<Location>()
             newLocations.addAll(locations.value)
             newLocations.add(location)
-            distanceCalculator.calculate(newLocations)
+            distanceCalculator.calculate(newLocations.toList())
             _locations.emit(newLocations)
         }
 }

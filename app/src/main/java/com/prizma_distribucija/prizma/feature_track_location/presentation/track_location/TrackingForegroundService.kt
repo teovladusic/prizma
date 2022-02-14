@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.lifecycle.LifecycleService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.prizma_distribucija.prizma.core.domain.model.User
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.BuildNotificationUseCase
@@ -12,6 +13,14 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class TrackingForegroundService : LifecycleService() {
+
+    companion object {
+        lateinit var user: User
+        lateinit var timeStarted: String
+        lateinit var timeFinished: String
+        lateinit var distance: String
+        lateinit var avgSpeed: String
+    }
 
     @Inject
     lateinit var permissionManager: PermissionManager

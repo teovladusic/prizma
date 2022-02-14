@@ -7,10 +7,7 @@ import com.prizma_distribucija.prizma.core.util.DispatcherProvider
 import com.prizma_distribucija.prizma.feature_login.domain.repository.LoginRepository
 import com.prizma_distribucija.prizma.feature_login.domain.use_case.LogInUseCase
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
-import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.GoogleMapMangerFakeImpl
-import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImplAndroidTest
-import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.PermissionManagerFakeImpl
-import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.TimerFakeImpl
+import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.BuildNotificationUseCase
 import dagger.Module
 import dagger.Provides
@@ -55,7 +52,7 @@ object TestAppModule {
 
     @Provides
     @Singleton
-    fun provideGoogleMapManager(): GoogleMapManager = GoogleMapMangerFakeImpl()
+    fun provideGoogleMapManager(): GoogleMapManager = GoogleMapManagerFakeImpl()
 
     @Provides
     @Singleton
@@ -67,4 +64,13 @@ object TestAppModule {
     @Singleton
     fun provideDistanceCalculator(dispatcherProvider: DispatcherProvider): DistanceCalculator =
         DistanceCalculatorImpl(dispatcherProvider)
+
+    @Provides
+    @Singleton
+    fun provideInternalStorageManager(): InternalStorageManager = InternalStorageManagerFakeImpl()
+
+    @Provides
+    @Singleton
+    fun provideTrackLocationRepository(): TrackLocationRepository =
+        TrackLocationRepositoryFakeImpl()
 }

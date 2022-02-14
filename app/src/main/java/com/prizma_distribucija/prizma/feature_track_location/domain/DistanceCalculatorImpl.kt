@@ -21,7 +21,7 @@ class DistanceCalculatorImpl @Inject constructor(
     override val distanceTravelled: StateFlow<Double>
         get() = _distanceTravelled.asStateFlow()
 
-    override fun calculate(locations: List<Location>) = CoroutineScope(dispatchers.main).launch {
+    override fun calculate(locations: List<Location>) = CoroutineScope(dispatchers.default).launch {
         if (locations.size < 2) return@launch
         val lastLocation = locations.last()
         val preLastLocation = locations.dropLast(1).last()
@@ -34,5 +34,11 @@ class DistanceCalculatorImpl @Inject constructor(
         val newDistance = distanceTravelled.value + distance
 
         _distanceTravelled.emit(newDistance)
+    }
+
+    override fun reset() {
+        CoroutineScope(dispatchers.default).launch {
+            _distanceTravelled.emit(0.0)
+        }
     }
 }

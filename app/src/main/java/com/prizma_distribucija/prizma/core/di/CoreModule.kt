@@ -2,6 +2,8 @@ package com.prizma_distribucija.prizma.core.di
 
 import android.content.Context
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.prizma_distribucija.prizma.core.data.services.FirebaseService
 import com.prizma_distribucija.prizma.core.data.services.FirebaseServiceImpl
 import com.prizma_distribucija.prizma.core.util.DefaultDispatchers
@@ -10,8 +12,10 @@ import com.prizma_distribucija.prizma.feature_login.data.repository.LoginReposit
 import com.prizma_distribucija.prizma.feature_login.domain.model.UserDtoMapper
 import com.prizma_distribucija.prizma.feature_login.domain.repository.LoginRepository
 import com.prizma_distribucija.prizma.feature_login.domain.use_case.LogInUseCase
+import com.prizma_distribucija.prizma.feature_track_location.data.repository.TrackLocationRepositoryImpl
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.BuildNotificationUseCase
+import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.SaveUriToRemoteDatabaseUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,8 +29,11 @@ object CoreModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseService(firebaseFirestore: FirebaseFirestore) =
-        FirebaseServiceImpl(firebaseFirestore) as FirebaseService
+    fun provideFirebaseService(
+        firebaseFirestore: FirebaseFirestore,
+        storageReference: StorageReference
+    ) =
+        FirebaseServiceImpl(firebaseFirestore, storageReference) as FirebaseService
 
     @Singleton
     @Provides
@@ -55,7 +62,10 @@ object CoreModule {
 
     @Provides
     @Singleton
-    fun provideLocationTracker(dispatchers: DispatcherProvider, distanceCalculator: DistanceCalculator): LocationTracker =
+    fun provideLocationTracker(
+        dispatchers: DispatcherProvider,
+        distanceCalculator: DistanceCalculator
+    ): LocationTracker =
         LocationTrackerImpl(dispatchers, distanceCalculator)
 
     @Provides
@@ -77,4 +87,24 @@ object CoreModule {
     @Singleton
     fun provideDistanceCalculator(dispatchers: DispatcherProvider): DistanceCalculator =
         DistanceCalculatorImpl(dispatchers)
+
+    @Provides
+    @Singleton
+    fun provideInternalStorageManager(): InternalStorageManager = InternalStorageManagerImpl()
+
+    @Provides
+    @Singleton
+    fun provideTrackLocationRepository(firebaseService: FirebaseService): TrackLocationRepository =
+        TrackLocationRepositoryImpl(firebaseService)
+
+    @Provides
+    @Singleton
+    fun provideSaveBitmapToRemoteDatabaseUseCase(
+        trackLocationRepository: TrackLocationRepository,
+    ): SaveUriToRemoteDatabaseUseCase =
+        SaveUriToRemoteDatabaseUseCase(trackLocationRepository)
+
+    @Provides
+    @Singleton
+    fun provideStorageReference(): StorageReference = FirebaseStorage.getInstance().reference
 }
