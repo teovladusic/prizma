@@ -21,6 +21,8 @@ class DistanceCalculatorImpl @Inject constructor(
     override val distanceTravelled: StateFlow<Double>
         get() = _distanceTravelled.asStateFlow()
 
+    private var lastMarkerDistance = 0f
+
     override fun calculate(locations: List<Location>) = CoroutineScope(dispatchers.default).launch {
         if (locations.size < 2) return@launch
         val lastLocation = locations.last()
@@ -29,11 +31,27 @@ class DistanceCalculatorImpl @Inject constructor(
         val lastLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
         val preLastLatLng = LatLng(preLastLocation.latitude, preLastLocation.longitude)
 
-        val distance = SphericalUtil.computeDistanceBetween(preLastLatLng, lastLatLng)
+        val distance = calculateDistanceBetweenTwoLatLng(preLastLatLng, lastLatLng)
 
         val newDistance = distanceTravelled.value + distance
 
         _distanceTravelled.emit(newDistance)
+    }
+
+    override fun shouldAddNewMarker(): Pair<Boolean, String> {
+        val shouldAddMarker = distanceTravelled.value - lastMarkerDistance >= 1000
+        var text = ""
+
+        if (shouldAddMarker) {
+            lastMarkerDistance += 1000f
+            text = lastMarkerDistance.toString().first().toString()
+        }
+
+        return Pair(shouldAddMarker, text)
+    }
+
+    private fun calculateDistanceBetweenTwoLatLng(latLng1: LatLng, latLng2: LatLng): Double {
+        return SphericalUtil.computeDistanceBetween(latLng1, latLng2)
     }
 
     override fun reset() {

@@ -5,6 +5,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
 import com.prizma_distribucija.prizma.feature_track_location.domain.LocationTracker
+import com.prizma_distribucija.prizma.feature_track_location.domain.model.MarkerPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -70,4 +71,7 @@ class LocationTrackerFakeImplAndroidTest(
             _isTrackingStateFlow.emit(false)
         }
     }
+
+    override val markerPoints: StateFlow<List<MarkerPoint>>
+        get() = MutableStateFlow<List<MarkerPoint>>(emptyList()).asStateFlow()
 }

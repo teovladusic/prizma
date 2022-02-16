@@ -8,7 +8,9 @@ interface DistanceCalculator {
 
     val distanceTravelled: StateFlow<Double>
 
-    fun calculate(locations: List<Location>) : Job
+    fun calculate(locations: List<Location>): Job
 
     fun reset()
+
+    fun shouldAddNewMarker(): Pair<Boolean, String>
 }

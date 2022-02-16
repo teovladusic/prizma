@@ -83,4 +83,46 @@ class DistanceCalculatorTests {
 
         assert(distanceCalculator.distanceTravelled.value == 0.0)
     }
+
+
+    @Test
+    fun shouldAddNewMarker_shouldReturnTrue() = runTest {
+        //setting locations which distance is 5000km
+        val location1 = Location("")
+        location1.latitude = 45.0
+        location1.longitude = 45.0
+
+        val location2 = Location("")
+        location2.latitude = 90.0
+        location2.longitude = 90.0
+
+        val locations = listOf(location1, location2)
+
+        distanceCalculator.calculate(locations)
+
+        val assertion = distanceCalculator.shouldAddNewMarker()
+
+        assert(assertion.first)
+    }
+
+    @Test
+    fun shouldAddNewMarker_shouldReturnFalse() = runTest {
+        //setting same locations, distance = 0
+        val location1 = Location("")
+        location1.latitude = 45.0
+        location1.longitude = 45.0
+
+        val location2 = Location("")
+        location2.latitude = 45.0
+        location2.longitude = 45.0
+
+        val locations = listOf(location1, location2)
+
+        distanceCalculator.calculate(locations)
+
+        val assertion = distanceCalculator.shouldAddNewMarker()
+
+        assert(assertion.first == false)
+    }
+
 }

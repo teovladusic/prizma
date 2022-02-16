@@ -40,6 +40,8 @@ class TrackLocationViewModel @Inject constructor(
 
     val locations = locationTracker.locations
 
+    val distanceMarkerPoints = locationTracker.markerPoints
+
     private val trackLocationEventsChannel = Channel<TrackLocationEvents>()
     val trackLocationEvents = trackLocationEventsChannel.receiveAsFlow()
 
@@ -154,7 +156,8 @@ class TrackLocationViewModel @Inject constructor(
         val timeFinished = TrackingForegroundService.timeFinished
         val distance = TrackingForegroundService.distance
         val avgSpeed = TrackingForegroundService.avgSpeed
-        return "${user!!.name}_${user.lastName}/$date, $timeStarted - $timeFinished, $distance km, $avgSpeed km|h"
+        return "${TrackingForegroundService.user.name}_${TrackingForegroundService.user.lastName}/$date, " +
+                "$timeStarted - $timeFinished, $distance km, $avgSpeed km|h"
     }
 
     @SuppressLint("SimpleDateFormat")

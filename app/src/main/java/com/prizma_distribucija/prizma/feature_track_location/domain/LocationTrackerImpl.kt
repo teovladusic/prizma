@@ -9,9 +9,12 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.prizma_distribucija.prizma.core.util.Constants.FASTEST_LOCATION_INTERVAL
 import com.prizma_distribucija.prizma.core.util.Constants.LOCATION_UPDATE_INTERVAL
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
+import com.prizma_distribucija.prizma.feature_track_location.domain.model.MarkerPoint
 import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.TrackingForegroundService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +32,9 @@ class LocationTrackerImpl @Inject constructor(
 
     private val _isTrackingStateFlow = MutableStateFlow(false)
     override val isTrackingStateFlow: StateFlow<Boolean> = _isTrackingStateFlow
+
+    private val _markerPoints = MutableStateFlow(emptyList<MarkerPoint>())
+    override val markerPoints = _markerPoints.asStateFlow()
 
     private val _locations = MutableStateFlow(emptyList<Location>())
     override val locations = _locations.asStateFlow()
@@ -111,11 +117,23 @@ class LocationTrackerImpl @Inject constructor(
     }
 
     private fun addLocationAndCalculateDistance(location: Location) =
-        CoroutineScope(dispatchers.main).launch {
+        CoroutineScope(dispatchers.default).launch {
             val newLocations = mutableListOf<Location>()
             newLocations.addAll(locations.value)
             newLocations.add(location)
             distanceCalculator.calculate(newLocations.toList())
+            addNewMarkerPointIfNeeded(location)
             _locations.emit(newLocations)
         }
+
+    private suspend fun addNewMarkerPointIfNeeded(location: Location) {
+        val shouldAddNewMarker = distanceCalculator.shouldAddNewMarker()
+        if (shouldAddNewMarker.first) {
+            val newMarkerPoints = markerPoints.value.toMutableList()
+            val latLng = LatLng(location.latitude, location.longitude)
+            val text = shouldAddNewMarker.second
+            newMarkerPoints.add(MarkerPoint(latLng, text))
+            _markerPoints.emit(newMarkerPoints)
+        }
+    }
 }

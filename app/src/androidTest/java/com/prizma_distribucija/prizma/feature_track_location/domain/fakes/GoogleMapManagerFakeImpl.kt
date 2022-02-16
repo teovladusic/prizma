@@ -6,6 +6,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.prizma_distribucija.prizma.feature_track_location.domain.GoogleMapManager
+import com.prizma_distribucija.prizma.feature_track_location.domain.model.MarkerPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,5 +49,13 @@ class GoogleMapManagerFakeImpl : GoogleMapManager {
 
     override fun onScreenshotTaken() {
         isScreenshotTaken = true
+    }
+
+    override fun drawMarkerPoints(
+        map: GoogleMap,
+        markerPoints: List<MarkerPoint>,
+        context: Context
+    ) {
+        return
     }
 }

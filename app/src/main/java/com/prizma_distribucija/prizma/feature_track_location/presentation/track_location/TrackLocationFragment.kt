@@ -3,18 +3,22 @@ package com.prizma_distribucija.prizma.feature_track_location.presentation.track
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
+import android.graphics.*
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.work.WorkManager
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.material.snackbar.Snackbar
@@ -158,6 +162,13 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
                 }
             }
         }
+
+        requireActivity().collectLatestLifecycleFlow(viewModel.distanceMarkerPoints) { markerPoints ->
+            map?.let { googleMap ->
+                googleMapsManager.drawMarkerPoints(googleMap, markerPoints, requireContext())
+            }
+        }
+
     }
 
     private fun createLoadingDialog() {
@@ -206,7 +217,8 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
             return@launch
         }
 
-        viewModel.uri = internalStorageManager.getUriFromInternalStorage(fileName, requireActivity())
+        viewModel.uri =
+            internalStorageManager.getUriFromInternalStorage(fileName, requireActivity())
 
         viewModel.saveUriToDatabase(viewModel.uri!!)
     }

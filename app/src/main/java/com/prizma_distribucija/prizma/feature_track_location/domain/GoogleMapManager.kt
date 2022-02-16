@@ -4,6 +4,8 @@ import android.content.Context
 import android.location.Location
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
+import com.prizma_distribucija.prizma.feature_track_location.domain.model.MarkerPoint
 import kotlinx.coroutines.flow.StateFlow
 
 interface GoogleMapManager {
@@ -18,5 +20,15 @@ interface GoogleMapManager {
 
     fun drawPolyLineBetweenAllPathPoints(map: GoogleMap, locations: List<Location>)
 
-    fun zoomOutToSeeEveryPathPoint(map: GoogleMap, latLngBounds: LatLngBounds, width: Int, height: Int, padding: Int)
+    fun zoomOutToSeeEveryPathPoint(
+        map: GoogleMap,
+        latLngBounds: LatLngBounds,
+        width: Int,
+        height: Int,
+        padding: Int
+    )
+
+    fun drawMarkerPoints(
+        map: GoogleMap, markerPoints: List<MarkerPoint>, context: Context
+    )
 }

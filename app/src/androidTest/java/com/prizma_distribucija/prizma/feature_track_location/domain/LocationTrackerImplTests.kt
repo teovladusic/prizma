@@ -197,4 +197,57 @@ class LocationTrackerImplTests {
 
         verify(distanceCalculator).reset()
     }
+
+    @Test
+    fun addNewMarkerIfNeeded_shouldAddNewMarker() = runTest {
+        val dispatchers = AndroidTestDispatchers()
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+
+        `when`(distanceCalculator.shouldAddNewMarker()).thenReturn(true to "1")
+
+        val locationTracker = LocationTrackerImpl(dispatchers, distanceCalculator)
+
+        val location1 = Location("")
+        location1.latitude = 45.0
+        location1.longitude = 45.0
+
+        val location2 = Location("")
+        location2.latitude = 90.0
+        location2.longitude = 90.0
+
+        assert(locationTracker.markerPoints.value.isEmpty())
+
+        val locationResult = LocationResult.create(listOf(location1, location2))
+
+        locationTracker.locationCallback.onLocationResult(locationResult)
+
+        assert(locationTracker.markerPoints.value.isNotEmpty())
+    }
+
+    @Test
+    fun addNewMarkerIfNeeded_shouldNotAddNewMarker() = runTest {
+        val dispatchers = AndroidTestDispatchers()
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+
+        `when`(distanceCalculator.shouldAddNewMarker()).thenReturn(false to "")
+
+        val locationTracker = LocationTrackerImpl(dispatchers, distanceCalculator)
+
+        val location1 = Location("")
+        location1.latitude = 45.0
+        location1.longitude = 45.0
+
+        val location2 = Location("")
+        location2.latitude = 90.0
+        location2.longitude = 90.0
+
+        assert(locationTracker.markerPoints.value.isEmpty())
+
+        val locationResult = LocationResult.create(listOf(location1, location2))
+
+        locationTracker.locationCallback.onLocationResult(locationResult)
+
+        assert(locationTracker.markerPoints.value.isEmpty())
+    }
+
 }
