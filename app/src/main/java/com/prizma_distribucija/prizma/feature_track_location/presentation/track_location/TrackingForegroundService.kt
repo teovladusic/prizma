@@ -16,10 +16,6 @@ class TrackingForegroundService : LifecycleService() {
 
     companion object {
         lateinit var user: User
-        lateinit var timeStarted: String
-        lateinit var timeFinished: String
-        lateinit var distance: String
-        lateinit var avgSpeed: String
     }
 
     @Inject

@@ -66,15 +66,9 @@ class LocationTrackerImpl @Inject constructor(
 
     override fun stopTracking() {
         CoroutineScope(dispatchers.default).launch {
-            _isTrackingStateFlow.emit(false)
             removeLocationUpdates()
-            TrackingForegroundService.distance =
-                convertDistanceInMetersToKm(distanceCalculator.distanceTravelled.value).toString()
+            _isTrackingStateFlow.emit(false)
         }
-    }
-
-    private fun convertDistanceInMetersToKm(distance: Double): BigDecimal {
-        return BigDecimal(distance / 1000).setScale(2, RoundingMode.HALF_EVEN)
     }
 
     @SuppressLint("MissingPermission")

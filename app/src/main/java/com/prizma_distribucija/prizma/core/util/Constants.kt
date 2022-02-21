@@ -7,6 +7,7 @@ import com.google.maps.android.collections.PolylineManager
 
 object Constants {
     const val USERS_COLLECTION_NAME = "users"
+    const val ROUTES_COLLECTION_NAME = "routes"
     const val NO_USER_FOUND_ERROR_MESSAGE = "Kod je neispravan."
 
     const val REQUEST_CODE_LOCATION_PERMISSION = 0

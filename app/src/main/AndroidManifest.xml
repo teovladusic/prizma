@@ -28,6 +28,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Prizma">
 
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove">
+        </provider>
+
         <service android:name=".feature_track_location.presentation.track_location.TrackingForegroundService"
             android:foregroundServiceType="location"/>
 

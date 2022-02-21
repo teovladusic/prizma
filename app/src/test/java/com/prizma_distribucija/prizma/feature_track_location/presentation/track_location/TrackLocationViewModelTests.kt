@@ -1,22 +1,21 @@
 package com.prizma_distribucija.prizma.feature_track_location.presentation.track_location
 
-import android.location.Location
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.LatLng
 import com.google.common.truth.Truth.assertThat
 import com.prizma_distribucija.prizma.core.domain.model.User
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.core.util.DispatcherProvider
 import com.prizma_distribucija.prizma.core.util.TestDispatchers
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
+import com.prizma_distribucija.prizma.feature_track_location.domain.Timer
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImpl
-import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.SaveUriToRemoteDatabaseUseCase
-import kotlinx.coroutines.CoroutineScope
+import com.prizma_distribucija.prizma.feature_track_location.domain.model.Route
+import com.prizma_distribucija.prizma.feature_track_location.domain.model.TaskResult
+import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.SaveRouteToRemoteDatabaseUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -24,6 +23,8 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
 import java.math.BigDecimal
+import java.text.SimpleDateFormat
+import java.util.*
 
 @ExperimentalCoroutinesApi
 class TrackLocationViewModelTests {
@@ -39,7 +40,8 @@ class TrackLocationViewModelTests {
         val savedStateHandle = SavedStateHandle()
         savedStateHandle.set("user", User("", "", "", ""))
         val trackLocationRepository = mock(TrackLocationRepository::class.java)
-        val saveUriToRemoteDatabaseUseCase = SaveUriToRemoteDatabaseUseCase(trackLocationRepository)
+        val saveRouteToRemoteDatabaseUseCase =
+            SaveRouteToRemoteDatabaseUseCase(trackLocationRepository)
         viewModel =
             TrackLocationViewModel(
                 testDispatchers,
@@ -47,7 +49,7 @@ class TrackLocationViewModelTests {
                 timer,
                 distanceCalculator,
                 savedStateHandle,
-                saveUriToRemoteDatabaseUseCase
+                saveRouteToRemoteDatabaseUseCase
             )
     }
 
@@ -127,9 +129,6 @@ class TrackLocationViewModelTests {
                     ).isEqualTo(
                         Constants.STOP_SERVICE_ACTION
                     )
-                    val emission2 = awaitItem()
-                    assertThat(emission2).isInstanceOf(TrackLocationViewModel.TrackLocationEvents.ZoomOutToSeeEveryPathPoint::class.java)
-                    cancelAndIgnoreRemainingEvents()
                 }
             }
 
@@ -154,7 +153,8 @@ class TrackLocationViewModelTests {
         val savedStateHandle = SavedStateHandle()
         savedStateHandle.set("user", User("", "", "", ""))
         val trackLocationRepository = mock(TrackLocationRepository::class.java)
-        val saveUriToRemoteDatabaseUseCase = SaveUriToRemoteDatabaseUseCase(trackLocationRepository)
+        val saveUriToRemoteDatabaseUseCase =
+            SaveRouteToRemoteDatabaseUseCase(trackLocationRepository)
 
         viewModel =
             TrackLocationViewModel(
@@ -172,5 +172,69 @@ class TrackLocationViewModelTests {
             val distanceInKm = awaitItem()
             assertThat(distanceInKm).isEqualTo(expected)
         }
+    }
+
+    @Test
+    fun onStopTracking_shouldSaveRouteToDatabase() = runTest {
+        val sdf = SimpleDateFormat("dd/MM/yyyy")
+        var date = sdf.format(Date())
+        date = date.replace("/", ".")
+
+        val year = date.takeLast(4)
+        val month = "${date[3]}${date[4]}"
+        val day = date.take(2)
+
+        val avgSpeed = "0"
+
+        val route = Route(
+            avgSpeed, "0.0", month.toInt(), emptyList(), "01:00", "01:00", "",
+            year.toInt(), day.toInt()
+        )
+
+        val user = User("", "", "", "")
+        TrackingForegroundService.user = user
+
+
+        val testDispatchers = TestDispatchers() as DispatcherProvider
+
+        val locationTracker = LocationTrackerFakeImpl(testDispatchers) as LocationTracker
+        LocationTrackerFakeImpl._locations.emit(emptyList())
+
+        val timer = mock(Timer::class.java)
+        `when`(timer.timeStarted).thenReturn(0L)
+        `when`(timer.timeFinished).thenReturn(0L)
+
+        val distanceCalculator = mock(DistanceCalculator::class.java)
+        `when`(distanceCalculator.distanceTravelled).thenReturn(MutableStateFlow(0.0).asStateFlow())
+
+        val savedStateHandle = SavedStateHandle()
+        savedStateHandle.set("user", user)
+
+        val trackLocationRepository = mock(TrackLocationRepository::class.java)
+        `when`(trackLocationRepository.saveRouteToRemoteDatabase(route)).thenReturn(
+            TaskResult(isComplete = true, isSuccess = true, errorMessage = null)
+        )
+        val saveRouteToRemoteDatabaseUseCase =
+            SaveRouteToRemoteDatabaseUseCase(trackLocationRepository)
+        viewModel =
+            TrackLocationViewModel(
+                testDispatchers,
+                locationTracker,
+                timer,
+                distanceCalculator,
+                savedStateHandle,
+                saveRouteToRemoteDatabaseUseCase
+            )
+
+
+
+        LocationTrackerFakeImpl._isTrackingStateFlow.emit(true)
+        assertThat(viewModel.isTracking.value).isTrue()
+
+        //stop tracking
+        viewModel.onStartStopClicked(true)
+
+        //verify that it called save route
+        verify(trackLocationRepository).saveRouteToRemoteDatabase(route)
     }
 }

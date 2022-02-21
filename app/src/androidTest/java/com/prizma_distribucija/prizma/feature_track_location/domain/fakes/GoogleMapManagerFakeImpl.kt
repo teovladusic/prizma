@@ -17,7 +17,6 @@ class GoogleMapManagerFakeImpl : GoogleMapManager {
         var isOnNewPathPointsCalled = false
         var isSetStyleCalled = false
         var hasZoomedOut = false
-        var isScreenshotTaken = false
     }
 
     override fun setStyle(map: GoogleMap, context: Context) {
@@ -32,23 +31,6 @@ class GoogleMapManagerFakeImpl : GoogleMapManager {
     override fun onNewPathPoints(map: GoogleMap, locations: List<Location>) {
         isOnNewPathPointsCalled = true
         return
-    }
-
-    override val isReadyToScreenshot: StateFlow<Boolean>
-        get() = MutableStateFlow(false).asStateFlow()
-
-    override fun zoomOutToSeeEveryPathPoint(
-        map: GoogleMap,
-        latLngBounds: LatLngBounds,
-        width: Int,
-        height: Int,
-        padding: Int
-    ) {
-        hasZoomedOut = true
-    }
-
-    override fun onScreenshotTaken() {
-        isScreenshotTaken = true
     }
 
     override fun drawMarkerPoints(

@@ -7,6 +7,9 @@ interface Timer {
 
     val formattedTimePassed: StateFlow<String>
 
+    var timeStarted: Long
+    var timeFinished: Long
+
     var isTimerEnabled: Boolean
 
     fun startCounting() : Job

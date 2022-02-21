@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 @ExperimentalCoroutinesApi
 class TimerFakeImpl : Timer {
 
+    override var timeStarted: Long = 0L
+    override var timeFinished: Long = 0L
+
     private val dispatcherProvider = AndroidTestDispatchers()
 
     companion object {

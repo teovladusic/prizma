@@ -67,10 +67,6 @@ object TestAppModule {
 
     @Provides
     @Singleton
-    fun provideInternalStorageManager(): InternalStorageManager = InternalStorageManagerFakeImpl()
-
-    @Provides
-    @Singleton
     fun provideTrackLocationRepository(): TrackLocationRepository =
         TrackLocationRepositoryFakeImpl()
 }

@@ -10,23 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface GoogleMapManager {
 
-    val isReadyToScreenshot: StateFlow<Boolean>
-
-    fun onScreenshotTaken()
-
     fun onNewPathPoints(map: GoogleMap, locations: List<Location>)
 
     fun setStyle(map: GoogleMap, context: Context)
 
     fun drawPolyLineBetweenAllPathPoints(map: GoogleMap, locations: List<Location>)
-
-    fun zoomOutToSeeEveryPathPoint(
-        map: GoogleMap,
-        latLngBounds: LatLngBounds,
-        width: Int,
-        height: Int,
-        padding: Int
-    )
 
     fun drawMarkerPoints(
         map: GoogleMap, markerPoints: List<MarkerPoint>, context: Context

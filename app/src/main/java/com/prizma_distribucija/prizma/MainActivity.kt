@@ -8,6 +8,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.prizma_distribucija.prizma.core.util.Constants.ACTION_SHOW_TRACKING_FRAGMENT
 import com.prizma_distribucija.prizma.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import java.lang.IllegalArgumentException
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

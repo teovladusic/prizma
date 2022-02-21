@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.*
 import android.location.Location
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.graphics.drawable.toBitmap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -16,9 +15,6 @@ import com.prizma_distribucija.prizma.core.util.DispatcherProvider
 import com.prizma_distribucija.prizma.feature_track_location.domain.model.MarkerPoint
 import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.BearingCalculator
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,16 +29,6 @@ class GoogleMapManagerImpl @Inject constructor(
 
     private var map: GoogleMap? = null
     private var latestLatLng: LatLng? = null
-
-
-    private val _isReadyToScreenshot = MutableStateFlow(false)
-    override val isReadyToScreenshot: StateFlow<Boolean> = _isReadyToScreenshot.asStateFlow()
-
-    override fun onScreenshotTaken() {
-        CoroutineScope(dispatchers.default).launch {
-            _isReadyToScreenshot.emit(false)
-        }
-    }
 
     override fun onNewPathPoints(map: GoogleMap, locations: List<Location>) {
         this.map = map
@@ -102,26 +88,6 @@ class GoogleMapManagerImpl @Inject constructor(
                 .zoom(zoom)
 
         map.animateCamera(CameraUpdateFactory.newCameraPosition(position.build()))
-    }
-
-    override fun zoomOutToSeeEveryPathPoint(
-        map: GoogleMap,
-        latLngBounds: LatLngBounds,
-        width: Int,
-        height: Int,
-        padding: Int
-    ) {
-        val cameraUpdate = CameraUpdateFactory.newLatLngBounds(
-            latLngBounds,
-            width,
-            height,
-            padding
-        )
-
-        map.moveCamera(cameraUpdate)
-        CoroutineScope(dispatchers.default).launch {
-            _isReadyToScreenshot.emit(true)
-        }
     }
 
     private val drawnMarkers = emptyList<Marker>()

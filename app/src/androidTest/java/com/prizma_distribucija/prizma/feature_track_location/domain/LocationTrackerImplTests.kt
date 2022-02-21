@@ -116,25 +116,6 @@ class LocationTrackerImplTests {
     }
 
     @Test
-    fun stopTracking_setsDistance() = runTest {
-        val dispatchers = AndroidTestDispatchers()
-        val distanceCalculator = mock(DistanceCalculator::class.java)
-
-        `when`(distanceCalculator.distanceTravelled).thenReturn(MutableStateFlow(2000.0).asStateFlow())
-
-        val locationTracker = LocationTrackerImpl(dispatchers, distanceCalculator)
-
-        val fusedLocationProviderClient = mock(FusedLocationProviderClient::class.java)
-
-        locationTracker.startTracking(fusedLocationProviderClient)
-
-        locationTracker.stopTracking()
-
-        assert(TrackingForegroundService.distance == "2.00")
-
-    }
-
-    @Test
     fun onLocationResult_correctlyAddsAllPathPointsAndCalculatesDistance() {
         val location1 = Location("")
         location1.latitude = 1.0

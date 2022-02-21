@@ -22,12 +22,13 @@ class TimerImpl @Inject constructor(
     private val _formattedTimePassed = MutableStateFlow("00:00:00")
     override val formattedTimePassed: StateFlow<String> = _formattedTimePassed.asStateFlow()
 
-    private var timeStarted = 0L
+    override var timeStarted = 0L
+
+    override var timeFinished = 0L
 
     override fun startCounting() = CoroutineScope(dispatcherProvider.default).launch {
         isTimerEnabled = true
         timeStarted = System.currentTimeMillis()
-        TrackingForegroundService.timeStarted = formatDateInMillisToString(timeStarted)
 
         while (isTimerEnabled) {
             delay(1000)
@@ -72,7 +73,6 @@ class TimerImpl @Inject constructor(
 
     override fun stopCounting() {
         isTimerEnabled = false
-        val time = System.currentTimeMillis()
-        TrackingForegroundService.timeFinished = formatDateInMillisToString(time)
+        timeFinished = System.currentTimeMillis()
     }
 }
