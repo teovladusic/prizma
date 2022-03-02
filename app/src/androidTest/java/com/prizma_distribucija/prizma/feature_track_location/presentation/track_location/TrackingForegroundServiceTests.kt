@@ -7,7 +7,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import com.prizma_distribucija.prizma.R
-import com.prizma_distribucija.prizma.core.di.CoreModule
+import com.prizma_distribucija.prizma.core.di.SingletonModule
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.LocationTrackerFakeImplAndroidTest
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.PermissionManagerFakeImpl
 import com.prizma_distribucija.prizma.launchFragmentInHiltContainer
@@ -22,7 +22,7 @@ import org.junit.Test
 
 @ExperimentalCoroutinesApi
 @HiltAndroidTest
-@UninstallModules(CoreModule::class)
+@UninstallModules(SingletonModule::class)
 class TrackingForegroundServiceTests {
 
     @get:Rule()

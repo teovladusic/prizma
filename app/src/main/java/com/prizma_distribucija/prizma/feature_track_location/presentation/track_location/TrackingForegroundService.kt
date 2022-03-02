@@ -1,6 +1,9 @@
 package com.prizma_distribucija.prizma.feature_track_location.presentation.track_location
 
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -9,6 +12,10 @@ import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.BuildNotificationUseCase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -32,9 +39,15 @@ class TrackingForegroundService : LifecycleService() {
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
+    private lateinit var notificationManager: NotificationManager
+
+    private lateinit var notificationBuilder: NotificationCompat.Builder
+
     override fun onCreate() {
         super.onCreate()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationBuilder = buildNotificationUseCase(notificationManager)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -59,13 +72,22 @@ class TrackingForegroundService : LifecycleService() {
         }
     }
 
+
     private fun startService() {
         startForeground(
             Constants.NOTIFICATION_ID,
-            buildNotificationUseCase().build()
+            notificationBuilder.build()
         )
+        updateTime()
     }
 
+    private fun updateTime() = CoroutineScope(Dispatchers.Default).launch {
+        while (timer.isTimerEnabled) {
+            notificationBuilder.setContentText(timer.formattedTimePassed.value)
+            notificationManager.notify(Constants.NOTIFICATION_ID, notificationBuilder.build())
+            delay(1000)
+        }
+    }
 
     private fun stopServiceAndTracking() {
         locationTracker.stopTracking()

@@ -14,9 +14,10 @@ import com.prizma_distribucija.prizma.R
 import com.prizma_distribucija.prizma.core.util.Resource
 import com.prizma_distribucija.prizma.databinding.FragmentLoginBinding
 import com.prizma_distribucija.prizma.core.domain.model.User
-import com.prizma_distribucija.prizma.core.util.collectLatestLifecycleFlow
 import com.prizma_distribucija.prizma.core.util.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class LoginFragment : Fragment(R.layout.fragment_login) {
@@ -39,18 +40,22 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         setUpKeyboardListeners()
 
-        requireActivity().collectLatestLifecycleFlow(viewModel.signInStatus) {
-            when (it) {
-                is Resource.Success -> {
-                    handleLogInSuccess(it)
-                }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.signInStatus.collectLatest { event ->
+                    when (event) {
+                        is Resource.Success -> {
+                            handleLogInSuccess(event)
+                        }
 
-                is Resource.Error -> {
-                    handleLogInError(it)
-                }
+                        is Resource.Error -> {
+                            handleLogInError(event)
+                        }
 
-                is Resource.Loading -> {
-                    handleLogInLoading()
+                        is Resource.Loading -> {
+                            handleLogInLoading()
+                        }
+                    }
                 }
             }
         }
@@ -189,6 +194,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     override fun onDestroyView() {
         _binding = null
+        loadingDialog.dismiss()
         super.onDestroyView()
     }
 }

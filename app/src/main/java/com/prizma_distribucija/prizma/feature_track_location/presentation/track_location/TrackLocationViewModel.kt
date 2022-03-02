@@ -17,6 +17,7 @@ import com.prizma_distribucija.prizma.feature_track_location.domain.Timer
 import com.prizma_distribucija.prizma.feature_track_location.domain.model.Route
 import com.prizma_distribucija.prizma.feature_track_location.domain.use_cases.SaveRouteToRemoteDatabaseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,7 +35,6 @@ class TrackLocationViewModel @Inject constructor(
     private val timer: Timer,
     private val distanceCalculator: DistanceCalculator,
     savedStateHandle: SavedStateHandle,
-    private val saveRouteToRemoteDatabaseUseCase: SaveRouteToRemoteDatabaseUseCase
 ) : ViewModel() {
 
     val user = savedStateHandle.get<User>("user")
@@ -50,7 +50,6 @@ class TrackLocationViewModel @Inject constructor(
 
     val timePassed = timer.formattedTimePassed
 
-
     val distanceTravelled = distanceCalculator.distanceTravelled.map { distance ->
         roundOn2Decimals(distance / 1000)
     }
@@ -62,10 +61,10 @@ class TrackLocationViewModel @Inject constructor(
     private val _savingStatus = MutableSharedFlow<Resource<Boolean>>()
     val savingStatus = _savingStatus.asSharedFlow()
 
-    fun onStartStopClicked(hasPermissions: Boolean) {
+    fun onStartStopClicked(hasPermissions: Boolean, workManager: WorkManager) {
         if (isTracking.value) {
             stopTracking()
-            saveRouteToDatabase()
+            saveRouteToDatabase(workManager)
         } else {
             startTracking(hasPermissions)
             TrackingForegroundService.user = user!!
@@ -88,18 +87,20 @@ class TrackLocationViewModel @Inject constructor(
         }
     }
 
-    private fun saveRouteToDatabase() = viewModelScope.launch(dispatchers.io) {
-        val route = getRoute()
-        saveRouteToRemoteDatabaseUseCase(route).collectLatest {
-            _savingStatus.emit(it)
+    private fun saveRouteToDatabase(workManager: WorkManager) =
+        viewModelScope.launch(dispatchers.io) {
+            _savingStatus.emit(Resource.Loading(false))
+            val route = getRoute()
+            createAndBeginWorkManagerRequest(workManager, route)
+            _savingStatus.emit(Resource.Success(true))
         }
-    }
+
 
     private fun calculateAvgSpeed(
         timeFinished: String,
         timeStarted: String,
-        distance: String
-    ): Long {
+        distance: Double
+    ): Double {
         val hourStarted = timeStarted.take(2).toInt()
         val minutesStarted = timeStarted.takeLast(2).toInt()
 
@@ -112,24 +113,23 @@ class TrackLocationViewModel @Inject constructor(
         val timeNeededInSecs = timeFinishedInSeconds - timeStartedInSeconds
 
         if (timeNeededInSecs == 0) {
-            return 0
+            return 0.0
         }
 
-        val distanceInKm = distance.toDouble()
+        val metersPerSecond = distance / timeNeededInSecs
 
-        return distanceInKm.toLong() / timeNeededInSecs
-    }
-
-    fun onSendLaterClick(workManager: WorkManager) {
-        val route = getRoute()
-        createAndBeginWorkManagerRequest(workManager, route)
+        //km per hour
+        val rounded = roundOn2Decimals(metersPerSecond * 3.6)
+        return rounded.toDouble()
     }
 
     private fun getRoute(): Route {
         val pathPoints = locations.value.map { LatLng(it.latitude, it.longitude) }
         val timeStarted = formatDateInMillisToString(timer.timeStarted)
-        val timeFinished = formatDateInMillisToString(timer.timeFinished)
-        val distance = roundOn2Decimals(distanceCalculator.distanceTravelled.value).toString()
+        val currentTime = System.currentTimeMillis()
+        val timeFinished = formatDateInMillisToString(currentTime)
+        val distance =
+            roundOn2Decimals(distanceCalculator.distanceTravelled.value / 1000).toString()
         val date = getDate(Date())
         val userId = TrackingForegroundService.user.userId
         val year = date.takeLast(4)
@@ -139,12 +139,12 @@ class TrackLocationViewModel @Inject constructor(
         val avgSpeed = calculateAvgSpeed(
             timeFinished,
             timeStarted,
-            distance
+            distanceCalculator.distanceTravelled.value
         )
 
         return Route(
-            avgSpeed = avgSpeed.toString(),
-            distanceTravelled = distance,
+            avgSpeed = "$avgSpeed km/h",
+            distanceTravelled = "$distance km",
             month = month.toInt(),
             pathPoints = pathPoints,
             timeFinished = timeFinished,
@@ -160,7 +160,7 @@ class TrackLocationViewModel @Inject constructor(
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        //save json data to workmanager
+        //save json data to workManager
         val gson = Gson()
         val data = gson.toJson(route)
 

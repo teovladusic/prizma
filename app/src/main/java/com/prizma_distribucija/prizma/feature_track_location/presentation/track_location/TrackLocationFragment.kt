@@ -9,6 +9,9 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.work.WorkManager
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
@@ -16,13 +19,13 @@ import com.google.android.material.snackbar.Snackbar
 import com.prizma_distribucija.prizma.R
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.core.util.Resource
-import com.prizma_distribucija.prizma.core.util.collectLatestLifecycleFlow
 import com.prizma_distribucija.prizma.databinding.FragmentTrackLocationBinding
 import com.prizma_distribucija.prizma.databinding.LoadingDialogBinding
 import com.prizma_distribucija.prizma.feature_track_location.domain.GoogleMapManager
 import com.prizma_distribucija.prizma.feature_track_location.domain.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -83,79 +86,109 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
         workManager = WorkManager.getInstance(requireActivity().application)
 
         binding.btnStopStart.setOnClickListener {
-            viewModel.onStartStopClicked(permissionManager.hasPermissions(requireContext()))
+            val hasPermissions = permissionManager.hasPermissions(requireContext())
+            viewModel.onStartStopClicked(hasPermissions, workManager)
         }
 
-        requireActivity().collectLatestLifecycleFlow(viewModel.isTracking) { isTracking ->
-            if (isTracking) {
-                binding.btnStopStart.text = Constants.STOP_TRACKING_BUTTON_TEXT
-            } else {
-                binding.btnStopStart.text = Constants.START_TRACKING_BUTTON_TEXT
-            }
-        }
-
-        requireActivity().collectLatestLifecycleFlow(viewModel.trackLocationEvents) { event ->
-            when (event) {
-                is TrackLocationViewModel.TrackLocationEvents.RequestPermissions -> {
-                    requestPermissions()
-                }
-                is TrackLocationViewModel.TrackLocationEvents.SendCommandToForegroundService -> {
-                    sendCommandToTrackingForegroundService(event.action)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isTracking.collectLatest { isTracking ->
+                    if (isTracking) {
+                        binding.btnStopStart.text = Constants.STOP_TRACKING_BUTTON_TEXT
+                    } else {
+                        binding.btnStopStart.text = Constants.START_TRACKING_BUTTON_TEXT
+                    }
                 }
             }
         }
 
-        requireActivity().collectLatestLifecycleFlow(viewModel.locations) { locations ->
-            map?.let {
-                googleMapsManager.onNewPathPoints(it, locations)
-            }
-        }
-
-        requireActivity().collectLatestLifecycleFlow(viewModel.distanceTravelled) { distance ->
-            binding.tvDistance.text = "$distance km"
-        }
-
-        requireActivity().collectLatestLifecycleFlow(viewModel.timePassed) { timePassed ->
-            binding.tvTime.text = timePassed
-        }
-
-        requireActivity().collectLatestLifecycleFlow(viewModel.savingStatus) { event ->
-            when (event) {
-                is Resource.Loading -> {
-                    onSaveLoading()
-                }
-
-                is Resource.Success -> {
-                    onSaveSuccess()
-                }
-
-                is Resource.Error -> {
-                    onSaveError(event.message ?: "Unknown error appeared")
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.trackLocationEvents.collectLatest { event ->
+                    when (event) {
+                        is TrackLocationViewModel.TrackLocationEvents.RequestPermissions -> {
+                            requestPermissions()
+                        }
+                        is TrackLocationViewModel.TrackLocationEvents.SendCommandToForegroundService -> {
+                            sendCommandToTrackingForegroundService(event.action)
+                        }
+                    }
                 }
             }
         }
 
-        requireActivity().collectLatestLifecycleFlow(viewModel.distanceMarkerPoints) { markerPoints ->
-            map?.let { googleMap ->
-                googleMapsManager.drawMarkerPoints(googleMap, markerPoints, requireContext())
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.locations.collectLatest { locations ->
+                    map?.let {
+                        googleMapsManager.onNewPathPoints(it, locations)
+                    }
+                }
             }
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.distanceTravelled.collectLatest { distance ->
+                    binding.tvDistance.text = "$distance km"
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.timePassed.collectLatest { timePassed ->
+                    binding.tvTime.text = timePassed
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.savingStatus.collectLatest { event ->
+                    when (event) {
+                        is Resource.Loading -> {
+                            onSaveLoading()
+                        }
+
+                        is Resource.Success -> {
+                            onSaveSuccess()
+                        }
+
+                        is Resource.Error -> {
+                            onSaveError(event.message ?: "Unknown error appeared")
+                        }
+                    }
+
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.distanceMarkerPoints.collectLatest { markerPoints ->
+                    map?.let { googleMap ->
+                        googleMapsManager.drawMarkerPoints(
+                            googleMap,
+                            markerPoints,
+                            requireContext()
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun createLoadingDialog() {
         loadingDialog = AlertDialog.Builder(requireContext())
             .setView(loadingDialogBinding.root)
             .setCancelable(false)
-            .setNegativeButton("Posalji kasnije") { _, _ ->
-                viewModel.onSendLaterClick(workManager)
-            }
             .create()
     }
 
     @SuppressLint("SetTextI18n")
     private fun onSaveLoading() {
-        loadingDialogBinding.textView2.text = "Saving... Please wait"
+        loadingDialogBinding.textView2.text = "Saving"
         loadingDialog.show()
     }
 
@@ -163,7 +196,7 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
         loadingDialog.dismiss()
         binding.constraintLayoutSaved.visibility = View.VISIBLE
         CoroutineScope(Dispatchers.Main).launch {
-            delay(5000)
+            delay(3000)
             requireActivity().onBackPressed()
         }
     }
@@ -193,5 +226,17 @@ class TrackLocationFragment : Fragment(R.layout.fragment_track_location) {
 
     private fun requestPermissions() {
         permissionManager.requestPermissionsIfNeeded(requireActivity() as Context)
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        _loadingDialogBinding = null
+        super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        val mapFragment = childFragmentManager.findFragmentById(R.id.google_map) as SupportMapFragment?
+        mapFragment?.onDestroy()
+        super.onDestroy()
     }
 }

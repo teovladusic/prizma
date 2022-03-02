@@ -12,6 +12,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 
 @HiltWorker
@@ -22,14 +24,12 @@ class SaveRouteWhenConnectionAvailableWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val a = CoroutineScope(Dispatchers.IO).launch {
-            val routeJson = inputData.getString("route")
-            val gson = Gson()
-            val route = gson.fromJson(routeJson, Route::class.java)
+        val routeJson = inputData.getString("route")
+        val gson = Gson()
+        val route = gson.fromJson(routeJson, Route::class.java)
 
-            saveRouteToRemoteDatabaseUseCase(route)
-            Log.d("TAG", "doWork")
-        }
+        saveRouteToRemoteDatabaseUseCase(route).toList()
+
         return Result.success()
     }
 }

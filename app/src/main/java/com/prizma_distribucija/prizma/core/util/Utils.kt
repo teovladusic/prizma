@@ -12,15 +12,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-fun <T> ComponentActivity.collectLatestLifecycleFlow(flow: Flow<T>, collect: suspend (T) -> Unit) {
-    lifecycleScope.launch {
-        repeatOnLifecycle(Lifecycle.State.STARTED) {
-            flow.collectLatest(collect)
-        }
-    }
-}
-
 fun NavController.safeNavigate(direction: NavDirections) {
     currentDestination?.getAction(direction.actionId)?.run { navigate(direction) }
 }

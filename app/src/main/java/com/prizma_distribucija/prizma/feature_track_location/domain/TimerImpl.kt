@@ -24,8 +24,6 @@ class TimerImpl @Inject constructor(
 
     override var timeStarted = 0L
 
-    override var timeFinished = 0L
-
     override fun startCounting() = CoroutineScope(dispatcherProvider.default).launch {
         isTimerEnabled = true
         timeStarted = System.currentTimeMillis()
@@ -73,6 +71,5 @@ class TimerImpl @Inject constructor(
 
     override fun stopCounting() {
         isTimerEnabled = false
-        timeFinished = System.currentTimeMillis()
     }
 }

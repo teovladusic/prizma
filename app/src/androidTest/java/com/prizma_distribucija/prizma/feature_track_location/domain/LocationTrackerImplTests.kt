@@ -6,17 +6,13 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.filters.MediumTest
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.model.LatLng
-import com.prizma_distribucija.prizma.core.di.CoreModule
+import com.prizma_distribucija.prizma.core.di.SingletonModule
 import com.prizma_distribucija.prizma.core.util.AndroidTestDispatchers
 import com.prizma_distribucija.prizma.core.util.Constants
-import com.prizma_distribucija.prizma.feature_track_location.presentation.track_location.TrackingForegroundService
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -26,7 +22,7 @@ import org.mockito.Mockito.*
 @HiltAndroidTest
 @ExperimentalCoroutinesApi
 @MediumTest
-@UninstallModules(CoreModule::class)
+@UninstallModules(SingletonModule::class)
 class LocationTrackerImplTests {
 
     @get:Rule

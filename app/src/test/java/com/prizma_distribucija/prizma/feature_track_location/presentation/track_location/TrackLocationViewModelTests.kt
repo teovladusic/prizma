@@ -1,6 +1,7 @@
 package com.prizma_distribucija.prizma.feature_track_location.presentation.track_location
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.work.WorkManager
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.prizma_distribucija.prizma.core.domain.model.User
@@ -39,9 +40,6 @@ class TrackLocationViewModelTests {
         val distanceCalculator = DistanceCalculatorImpl(testDispatchers)
         val savedStateHandle = SavedStateHandle()
         savedStateHandle.set("user", User("", "", "", ""))
-        val trackLocationRepository = mock(TrackLocationRepository::class.java)
-        val saveRouteToRemoteDatabaseUseCase =
-            SaveRouteToRemoteDatabaseUseCase(trackLocationRepository)
         viewModel =
             TrackLocationViewModel(
                 testDispatchers,
@@ -49,7 +47,6 @@ class TrackLocationViewModelTests {
                 timer,
                 distanceCalculator,
                 savedStateHandle,
-                saveRouteToRemoteDatabaseUseCase
             )
     }
 
@@ -70,8 +67,8 @@ class TrackLocationViewModelTests {
                     cancelAndIgnoreRemainingEvents()
                 }
             }
-
-            viewModel.onStartStopClicked(hasPermissions)
+            val workManager = mock(WorkManager::class.java)
+            viewModel.onStartStopClicked(hasPermissions, workManager)
 
             job.join()
             job.cancel()
@@ -104,8 +101,8 @@ class TrackLocationViewModelTests {
                     cancelAndIgnoreRemainingEvents()
                 }
             }
-
-            viewModel.onStartStopClicked(hasPermissions)
+            val workManager = mock(WorkManager::class.java)
+            viewModel.onStartStopClicked(hasPermissions, workManager)
 
             job.join()
             job.cancel()
@@ -131,8 +128,8 @@ class TrackLocationViewModelTests {
                     )
                 }
             }
-
-            viewModel.onStartStopClicked(true)
+            val workManager = mock(WorkManager::class.java)
+            viewModel.onStartStopClicked(true, workManager)
 
             job.join()
             job.cancel()
@@ -152,10 +149,6 @@ class TrackLocationViewModelTests {
 
         val savedStateHandle = SavedStateHandle()
         savedStateHandle.set("user", User("", "", "", ""))
-        val trackLocationRepository = mock(TrackLocationRepository::class.java)
-        val saveUriToRemoteDatabaseUseCase =
-            SaveRouteToRemoteDatabaseUseCase(trackLocationRepository)
-
         viewModel =
             TrackLocationViewModel(
                 dispatcherProvider,
@@ -163,7 +156,6 @@ class TrackLocationViewModelTests {
                 timer,
                 distanceCalculator,
                 savedStateHandle,
-                saveUriToRemoteDatabaseUseCase
             )
 
         val expected = BigDecimal(0.50).setScale(2)
@@ -172,69 +164,5 @@ class TrackLocationViewModelTests {
             val distanceInKm = awaitItem()
             assertThat(distanceInKm).isEqualTo(expected)
         }
-    }
-
-    @Test
-    fun onStopTracking_shouldSaveRouteToDatabase() = runTest {
-        val sdf = SimpleDateFormat("dd/MM/yyyy")
-        var date = sdf.format(Date())
-        date = date.replace("/", ".")
-
-        val year = date.takeLast(4)
-        val month = "${date[3]}${date[4]}"
-        val day = date.take(2)
-
-        val avgSpeed = "0"
-
-        val route = Route(
-            avgSpeed, "0.0", month.toInt(), emptyList(), "01:00", "01:00", "",
-            year.toInt(), day.toInt()
-        )
-
-        val user = User("", "", "", "")
-        TrackingForegroundService.user = user
-
-
-        val testDispatchers = TestDispatchers() as DispatcherProvider
-
-        val locationTracker = LocationTrackerFakeImpl(testDispatchers) as LocationTracker
-        LocationTrackerFakeImpl._locations.emit(emptyList())
-
-        val timer = mock(Timer::class.java)
-        `when`(timer.timeStarted).thenReturn(0L)
-        `when`(timer.timeFinished).thenReturn(0L)
-
-        val distanceCalculator = mock(DistanceCalculator::class.java)
-        `when`(distanceCalculator.distanceTravelled).thenReturn(MutableStateFlow(0.0).asStateFlow())
-
-        val savedStateHandle = SavedStateHandle()
-        savedStateHandle.set("user", user)
-
-        val trackLocationRepository = mock(TrackLocationRepository::class.java)
-        `when`(trackLocationRepository.saveRouteToRemoteDatabase(route)).thenReturn(
-            TaskResult(isComplete = true, isSuccess = true, errorMessage = null)
-        )
-        val saveRouteToRemoteDatabaseUseCase =
-            SaveRouteToRemoteDatabaseUseCase(trackLocationRepository)
-        viewModel =
-            TrackLocationViewModel(
-                testDispatchers,
-                locationTracker,
-                timer,
-                distanceCalculator,
-                savedStateHandle,
-                saveRouteToRemoteDatabaseUseCase
-            )
-
-
-
-        LocationTrackerFakeImpl._isTrackingStateFlow.emit(true)
-        assertThat(viewModel.isTracking.value).isTrue()
-
-        //stop tracking
-        viewModel.onStartStopClicked(true)
-
-        //verify that it called save route
-        verify(trackLocationRepository).saveRouteToRemoteDatabase(route)
     }
 }

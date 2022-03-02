@@ -3,6 +3,7 @@ package com.prizma_distribucija.prizma.core.data.services
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import com.prizma_distribucija.prizma.core.util.Constants
@@ -16,6 +17,12 @@ class FirebaseServiceImpl @Inject constructor(
     private val firebaseFirestore: FirebaseFirestore,
     private val storage: StorageReference
 ) : FirebaseService {
+
+    init {
+        val settings = FirebaseFirestoreSettings.Builder()
+        settings.isPersistenceEnabled = false
+        firebaseFirestore.firestoreSettings = settings.build()
+    }
 
 
     override suspend fun getUsersByCode(code: String): List<UserDto> {

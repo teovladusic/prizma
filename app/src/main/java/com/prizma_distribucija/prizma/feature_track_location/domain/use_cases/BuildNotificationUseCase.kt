@@ -14,8 +14,6 @@ import com.prizma_distribucija.prizma.core.util.Constants
 
 class BuildNotificationUseCase(
     private val context: Context,
-    private val notificationManager: NotificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager,
 ) {
 
     companion object {
@@ -26,7 +24,7 @@ class BuildNotificationUseCase(
         private const val contentText = "00:00"
     }
 
-    operator fun invoke() : NotificationCompat.Builder {
+    operator fun invoke(notificationManager: NotificationManager) : NotificationCompat.Builder {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel(notificationManager)
         }

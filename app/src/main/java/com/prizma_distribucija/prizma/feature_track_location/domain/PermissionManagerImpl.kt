@@ -16,8 +16,6 @@ class PermissionManagerImpl : PermissionManager {
         private val permissionsNeededIfSdkLessThanQ = arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
         )
 
         @RequiresApi(Build.VERSION_CODES.Q)
@@ -26,8 +24,6 @@ class PermissionManagerImpl : PermissionManager {
             Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE
         )
 
         @RequiresApi(Build.VERSION_CODES.Q)
@@ -35,8 +31,6 @@ class PermissionManagerImpl : PermissionManager {
             Manifest.permission.FOREGROUND_SERVICE,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE
         )
 
         // in api level 29 and above you need to call foreground service permission

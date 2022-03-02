@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class TimerFakeImpl : Timer {
 
     override var timeStarted: Long = 0L
-    override var timeFinished: Long = 0L
 
     private val dispatcherProvider = AndroidTestDispatchers()
 

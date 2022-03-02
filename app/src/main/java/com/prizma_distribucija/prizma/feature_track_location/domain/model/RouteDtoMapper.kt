@@ -17,7 +17,7 @@ class RouteDtoMapper : EntityMapper<RouteDto, Route> {
             timeStarted = dto.timeStarted,
             userId = dto.userId,
             year = dto.year,
-            day = dto.year
+            day = dto.day
         )
     }
 
@@ -31,7 +31,7 @@ class RouteDtoMapper : EntityMapper<RouteDto, Route> {
             timeStarted = domainModel.timeStarted,
             userId = domainModel.userId,
             year = domainModel.year,
-            day = domainModel.year
+            day = domainModel.day
         )
     }
 }

@@ -7,11 +7,9 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.filters.MediumTest
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLngBounds
 import com.prizma_distribucija.prizma.R
-import com.prizma_distribucija.prizma.core.di.CoreModule
+import com.prizma_distribucija.prizma.core.di.SingletonModule
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.feature_track_location.domain.*
 import com.prizma_distribucija.prizma.feature_track_location.domain.fakes.GoogleMapManagerFakeImpl
@@ -28,12 +26,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.*
 
 @MediumTest
 @ExperimentalCoroutinesApi
 @HiltAndroidTest
-@UninstallModules(CoreModule::class)
+@UninstallModules(SingletonModule::class)
 class TrackLocationFragmentTests {
 
     @get:Rule

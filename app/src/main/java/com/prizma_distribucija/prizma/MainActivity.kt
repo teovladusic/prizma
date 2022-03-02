@@ -5,6 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.fragment.NavHostFragment
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.prizma_distribucija.prizma.core.util.Constants.ACTION_SHOW_TRACKING_FRAGMENT
 import com.prizma_distribucija.prizma.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint

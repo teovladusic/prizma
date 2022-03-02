@@ -10,7 +10,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.filters.MediumTest
 import com.prizma_distribucija.prizma.feature_login.data.repository.LoginRepoFakeImpl
 import com.prizma_distribucija.prizma.R
-import com.prizma_distribucija.prizma.core.di.CoreModule
+import com.prizma_distribucija.prizma.core.di.SingletonModule
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.core.util.safeNavigate
 import com.prizma_distribucija.prizma.launchFragmentInHiltContainer
@@ -27,7 +27,7 @@ import org.mockito.Mockito.*
 @ExperimentalCoroutinesApi
 @MediumTest
 @HiltAndroidTest
-@UninstallModules(CoreModule::class)
+@UninstallModules(SingletonModule::class)
 class LoginFragmentTest {
 
     @get:Rule
