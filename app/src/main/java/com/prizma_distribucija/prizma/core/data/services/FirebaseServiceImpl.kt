@@ -8,6 +8,7 @@ import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import com.prizma_distribucija.prizma.core.util.Constants
 import com.prizma_distribucija.prizma.feature_login.data.remote.dto.UserDto
+import com.prizma_distribucija.prizma.feature_track_location.data.remote.dto.PathPointDto
 import com.prizma_distribucija.prizma.feature_track_location.data.remote.dto.RouteDto
 import com.prizma_distribucija.prizma.feature_track_location.domain.model.TaskResult
 import kotlinx.coroutines.tasks.await
@@ -57,6 +58,18 @@ class FirebaseServiceImpl @Inject constructor(
                 isComplete = true,
                 errorMessage = "An error occurred"
             )
+        }
+    }
+
+    override suspend fun createNewDocumentId(): String {
+        val doc = firebaseFirestore.collection(Constants.ROUTES_COLLECTION_NAME).document()
+        return doc.id
+    }
+
+    override suspend fun saveAllPathPointsInFirestore(pathPoints: List<PathPointDto>) {
+        pathPoints.forEach {
+            firebaseFirestore.collection(Constants.PATH_POINTS_COLLECTION_NAME).document(it.id)
+                .set(it).await()
         }
     }
 }
